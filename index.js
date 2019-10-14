@@ -1,127 +1,58 @@
+let http = require('http');
+let url  = require('url');
+let port = process.env.port || 3000;
+let fs = require('fs');
 
-function onAddPress(){
-    var show = document.getElementsByTagName("div")[3].getAttribute("id")
-    if(show == 'artist-input'){
-        document.getElementsByTagName("div")[3].setAttribute("id", 'artist-input-hide')
-    } else {
-        document.getElementsByTagName("div")[3].setAttribute("id", 'artist-input')
-    }
-    document.getElementById("search").value="";
-}
 
-var storedArtist = [];
+function rqListner (req,res) {
 
-function add(artistName, artistAbout, artistUrl, addToStorage=true){
-    var name, about, url;
+    /* cd to current folder, in terminal type 
+        node app
+        navigate to localhost:8080 (open a browser type localhost:8080)
+    */ 
 
-    if(artistName == null) {
-        name = document.getElementById('name').value;
-        about = document.getElementById('about').value;
-        url = document.getElementById('url').value;
-    } else {
-        name = artistName;
-        about = artistAbout;
-        url = artistUrl;
-    }
-     
-    
-    if(name=='', about=='', url==''){
-        return 0;
-    }
-    var newArtistRow = document.createElement('div');
-    newArtistRow.className="row justify-content-center";
-    
-    var artistCol = document.createElement('div');
-    artistCol.className="col-md-4 col-md-offset-4 artist";
-    artistCol.id="artist";
-
-    var artistImg = document.createElement('img');
-    artistImg.className = "img";
-
-    var artistDescription = document.createElement('div');
-    artistDescription.className = "desc";
-
-    var deleteButton = document.createElement('button');
-    var buttonVal = document.createTextNode('Delete');
-    deleteButton.appendChild(buttonVal);
-    deleteButton.className = "delete-button";
-    deleteButton.id = name;
-    deleteButton.onclick = function(e) {
-        e.path[2].parentElement.removeChild(e.path[2]);
-        storedArtist = storedArtist.filter((artist) => {
-            return artist.name != this.id
-    })
-    localStorage.setItem("storedArtist", JSON.stringify(storedArtist));
-    }
-    
-
-    var artistName = document.createElement('h3')
-    var school= document.createElement('p')
-
-    var nameVal = document.createTextNode(name); 
-    artistName.appendChild(nameVal);  
-    artistName.className = "name"
-
-    var aboutVal = document.createTextNode(about);
-    school.appendChild(aboutVal);
-    school.className="name"
-
-    artistImg.src = url;
-
-    artistDescription.append(artistName, aboutVal)
-
-    newArtistRow.appendChild(artistCol).append(artistImg,artistDescription, deleteButton);
-    var currentDiv = document.getElementById("artist-insert"); 
-    currentDiv.append(newArtistRow);
-
-    document.getElementById('name').value ='';
-    document.getElementById('about').value='';
-    document.getElementById('url').value='';
-
-    if(addToStorage){
-        console.log(storedArtist)
-        storedArtist.push({name:name, about:about, url:url})
-        localStorage.setItem("storedArtist", JSON.stringify(storedArtist));
-        onAddPress();
-    }
-
-    
-
-}
-
-function search(){
-    name = document.getElementById("search").value;
-    var artist = localStorage.getItem("storedArtist");
-
-    if(artist != null && name==""){
-        artist = JSON.parse(artist)
-        clearArtist()
-        artist.map(ar => {
-            add(ar.name, ar.about, ar.url, false)
+    /* Simple Server */
+    console.log('I got a request');
+    if(req.url.indexOf('.html') != -1 || req.url == '/'){
+        fs.readFile(__dirname + '/public/html/index.html', function(err, data){
+            if(err) {
+                throw err;
+            }
+            res.writeHead(200, {'Content-Type': 'text/html', 'Content-length' : data.length});
+            res.write(data);
+            return res.end();
         })
-    } else {
-        if(artist != null){
-            artist = JSON.parse(artist)
-            clearArtist()
-            artist.map(ar => {
-                if(ar.name.includes(name)){
-                    add(ar.name, ar.about, ar.url, false)
-                }
-            })
-        } 
     }
-    document.getElementById("search").value="";
+    if(req.url.indexOf('.js') != -1){
+        fs.readFile(__dirname + '/public/js/index.js', function(err, data) {
+            if(err){
+                throw err;
+            }
+             res.writeHead(200, {'Content-Type': 'text/javascript'});
+             res.write(data);
+            return res.end();
+        })
+        
+    }
+    if(req.url.indexOf('.css') != -1){
+        fs.readFile(__dirname + '/public/css/index.css', function(err, data) {
+            if(err){
+                throw err;
+            }
+             res.writeHead(200, {'Content-Type': 'text/css'});
+             res.write(data);
+            return res.end();
+        })
+        
+    }
+    //try setting up endpoint
+    http.get("/", function(req, res) {
+        console.log("get")
+        res.send("GET REWQ")
+    })
     
 }
 
-function clearArtist(){
-    var artistInsert = document.getElementById("artist-insert"); 
-    while(artistInsert.firstChild){
-        artistInsert.removeChild(artistInsert.firstChild)
-    }
-}
-
-window.onload = function() {
-    storedArtist = JSON.parse(this.localStorage.getItem("storedArtist")) || [];
-    this.search();
-}
+let serv = http.createServer(rqListner);
+console.log('Server Started');
+serv.listen(port);
