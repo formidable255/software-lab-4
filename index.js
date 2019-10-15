@@ -45,11 +45,7 @@ function rqListner (req,res) {
         })
         
     }
-    //try setting up endpoint
-    http.get("/", function(req, res) {
-        console.log("get")
-        res.send("GET REWQ")
-    })
+
     
 }
 
